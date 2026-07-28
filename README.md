@@ -2,6 +2,8 @@
 
 Refract Keyboard is a private writing layer built into a lean Android keyboard.
 
+**Website:** [vorcigernix.github.io/refract](https://vorcigernix.github.io/refract/)
+
 You compose the real message inside the keyboard. Refract encrypts it and uses
 an on-device language model to generate ordinary-looking carrier text. Only the
 carrier is inserted into the host application; the private draft never enters

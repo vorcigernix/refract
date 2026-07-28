@@ -1,0 +1,14 @@
+{
+  "date": "2026-07-28",
+  "framework": "vanilla HTML",
+  "font_stack": "none",
+  "palette": "none",
+  "motion": "motion-cut",
+  "spacing": "none",
+  "preserved": [],
+  "introduced": [
+    "Brutal theme tokens",
+    "Manifesto macrostructure",
+    "responsive and accessibility rules"
+  ]
+}

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="brutal">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Refract Keyboard — Type in private</title>
+    <meta
+      name="description"
+      content="Refract is an open-source Android keyboard that keeps private drafts inside the keyboard and inserts only encrypted carrier text into the host app."
+    >
+    <meta property="og:title" content="Refract Keyboard — Type in private">
+    <meta
+      property="og:description"
+      content="An open-source Android keyboard with private composition, offline X25519 pairing, and local carrier generation."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://vorcigernix.github.io/refract/">
+    <link rel="canonical" href="https://vorcigernix.github.io/refract/">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="site-header" id="top">
+      <a class="wordmark" href="#top" aria-label="Refract Keyboard, back to top">
+        REFRACT / KEYBOARD
+      </a>
+      <a class="nav-install" href="#install">Install ↓</a>
+    </header>
+
+    <main id="content" tabindex="-1">
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="hero__meta">ANDROID 14+ · OPEN SOURCE · NO INTERNET PERMISSION</p>
+        <h1 id="hero-title">
+          TYPE IN PRIVATE.<br>
+          SEND ONLY <span>COVER TEXT.</span>
+        </h1>
+        <p class="hero__lede">
+          Refract keeps your real message inside the keyboard, encrypts it, and
+          uses an on-device model to encode it into ordinary-looking text. The
+          app beneath the keyboard receives the carrier—not your private draft.
+        </p>
+      </section>
+
+      <section class="declaration" aria-labelledby="declaration-title">
+        <h2 id="declaration-title">
+          PRIVATE SPEECH SHOULD NOT DEPEND ON INSTITUTIONAL RESTRAINT.
+        </h2>
+        <div class="declaration__copy">
+          <p>
+            A platform that receives plaintext can inspect it, retain it, or be
+            compelled to reveal it.
+          </p>
+          <p>
+            Whether the threat is routine platform surveillance, government
+            overreach inside the EU, or Putin’s security state, the safe
+            assumption is the same: do not hand the intermediary the private
+            message.
+          </p>
+          <p>
+            Refract changes that boundary. Your messaging app gets the cover.
+            The private writing stays with the keyboard.
+          </p>
+        </div>
+      </section>
+
+      <section class="mechanism" id="how-it-works" aria-labelledby="mechanism-title">
+        <div class="section-heading">
+          <h2 id="mechanism-title">THE MESSAGE TAKES A DIFFERENT PATH.</h2>
+          <p>
+            Refract adds one narrow private layer to AOSP LatinIME. Normal
+            typing remains a normal Android keyboard; Private mode reroutes
+            text before it reaches the host editor.
+          </p>
+        </div>
+
+        <ol class="protocol">
+          <li>
+            <p class="protocol__number" aria-hidden="true">01</p>
+            <div>
+              <h3>Compose inside the keyboard</h3>
+              <p>
+                Keystrokes enter Refract’s private draft buffer. The host
+                <code>InputConnection</code> receives nothing while you write.
+              </p>
+            </div>
+          </li>
+          <li>
+            <p class="protocol__number" aria-hidden="true">02</p>
+            <div>
+              <h3>Authenticate the payload</h3>
+              <p>
+                Paired conversation state encrypts, authenticates, and orders
+                the message. State advances only after carrier insertion
+                succeeds.
+              </p>
+            </div>
+          </li>
+          <li>
+            <p class="protocol__number" aria-hidden="true">03</p>
+            <div>
+              <h3>Generate locally</h3>
+              <p>
+                Gemma runs through LiteRT-LM on the phone’s CPU or GPU. The
+                ciphertext is encoded through the model’s token choices—no
+                network request is needed.
+              </p>
+            </div>
+          </li>
+          <li>
+            <p class="protocol__number" aria-hidden="true">04</p>
+            <div>
+              <h3>Insert only the carrier</h3>
+              <p>
+                Refract commits the completed carrier to the active message
+                field. You review it, then send it with the app you already use.
+              </p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="pairing" id="pairing" aria-labelledby="pairing-title">
+        <div class="pairing__argument">
+          <h2 id="pairing-title">NO SECRET TOKEN CROSSES THE CHAT.</h2>
+          <p>
+            Pairing is a two-QR X25519 exchange. Each code contains a temporary
+            public key—not the conversation key. Both phones derive the same
+            secret independently, then show five safety words for comparison.
+          </p>
+          <aside class="channel-warning">
+            <strong>Use a different channel.</strong>
+            Send the QR outside the chat you are protecting. Email is a
+            pragmatic option; delete it after pairing.
+          </aside>
+        </div>
+
+        <dl class="pairing__spec">
+          <div>
+            <dt>Exchange</dt>
+            <dd>X25519 · two public-key QR codes</dd>
+          </div>
+          <div>
+            <dt>Derivation</dt>
+            <dd>HKDF-SHA256 · transcript bound</dd>
+          </div>
+          <div>
+            <dt>Verification</dt>
+            <dd>Five matching safety words</dd>
+          </div>
+          <div>
+            <dt>Storage</dt>
+            <dd>Conversation key wrapped by Android Keystore</dd>
+          </div>
+          <div>
+            <dt>Invitation life</dt>
+            <dd>15 minutes</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="threat-model" id="threat-model" aria-labelledby="threat-title">
+        <h2 id="threat-title">KNOW THE BOUNDARY BEFORE YOU TRUST IT.</h2>
+        <div class="threat-grid">
+          <article class="threat-grid__protects">
+            <h3>What Refract changes</h3>
+            <ul>
+              <li>The host app does not receive the private draft.</li>
+              <li>The manifest requests no internet or network-state permission.</li>
+              <li>Pairing exchanges public keys and verifies the transcript.</li>
+              <li>Confirmed conversation keys are wrapped by Android Keystore.</li>
+              <li>The private composer blocks screenshots while visible.</li>
+            </ul>
+          </article>
+          <article class="threat-grid__limits">
+            <h3>What Refract does not claim</h3>
+            <ul>
+              <li>It does not hide traffic metadata or provide anonymity.</li>
+              <li>It cannot secure a compromised operating system or unlocked device.</li>
+              <li>Its carriers have not had an independent steganalysis audit.</li>
+              <li>Receiving, decoding, and missed-message recovery are not implemented yet.</li>
+              <li>It is an active prototype, not a promise of perfect secrecy.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="prototype" aria-labelledby="prototype-title">
+        <h2 id="prototype-title">EARLY USERS SHOULD BE SCEPTICAL.</h2>
+        <p>
+          The current build proves the private composer, offline pairing,
+          sender chain, local model loading, and carrier insertion path. Read
+          the code. Exercise the cancellation paths. Check what reaches the
+          host editor. Report the assumption that fails.
+        </p>
+        <a href="https://github.com/vorcigernix/refract/issues">Open an issue ↗</a>
+      </section>
+
+      <section class="install" id="install" aria-labelledby="install-title">
+        <div class="install__heading">
+          <h2 id="install-title">INSTALL IT. INSPECT IT. TRY TO BREAK IT.</h2>
+          <p>
+            Refract currently ships from source for Android 14 and newer. The
+            licensed Gemma model stays outside GitHub; place it at the documented
+            path before building.
+          </p>
+        </div>
+
+        <pre tabindex="0"><code>git clone https://github.com/vorcigernix/refract.git
+cd refract/refract-keyboard
+
+# Add java/assets/models/gemma-4-E2B-it.litertlm
+./gradlew assembleDebug
+adb install -r build/outputs/apk/debug/RefractKeyboard-debug.apk</code></pre>
+
+        <a
+          class="install-action"
+          href="https://github.com/vorcigernix/refract#build"
+        >
+          Install guide ↗
+        </a>
+      </section>
+
+      <section class="origins" aria-labelledby="origins-title">
+        <h2 id="origins-title">BUILT IN PUBLIC. BUILT ON PUBLIC WORK.</h2>
+        <p>
+          Refract combines the encryption and carrier research from
+          <a href="https://github.com/nethical6/conversation-steganography">
+            Conversation Stenography
+          </a>
+          with the keyboard engine, layouts, and native dictionary code from
+          <a href="https://android.googlesource.com/platform/packages/inputmethods/LatinIME/+/refs/tags/android-17.0.0_r1">
+            AOSP LatinIME
+          </a>.
+          The source is published under GPLv3; imported AOSP files retain their
+          Apache 2.0 notices.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        REFRACT KEYBOARD · ANDROID 14+ · OPEN SOURCE · GPLv3 · NO ANALYTICS ·
+        NO COOKIES · NO PAGE SCRIPTS ·
+        <a href="https://github.com/vorcigernix/refract">SOURCE ON GITHUB ↗</a>
+        · 2026
+      </p>
+    </footer>
+  </body>
+</html>
