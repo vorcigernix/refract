@@ -23,6 +23,22 @@ The current prototype implements pairing and the sending path. Receiving,
 decoding, and recovery after a missed or deleted carrier are not implemented
 yet.
 
+## Install the test build
+
+The [v0.1.0 debug release](https://github.com/vorcigernix/refract/releases/tag/v0.1.0-debug)
+targets arm64 devices running Android 14 or newer and includes the local model.
+The assembled APK is 2.66 GB, so GitHub hosts it as two parts. Download both
+parts and `SHA256SUMS`, then run:
+
+```sh
+cat RefractKeyboard-v0.1.0-debug.apk.part-* > RefractKeyboard-v0.1.0-debug.apk
+shasum -a 256 -c SHA256SUMS
+adb install -r RefractKeyboard-v0.1.0-debug.apk
+```
+
+This is a debug-signed experimental build. Plan for roughly 6 GB of installed
+storage, plus temporary space while Android installs it.
+
 ## Build
 
 Requirements:

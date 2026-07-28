@@ -201,24 +201,23 @@
         <div class="install__heading">
           <h2 id="install-title">INSTALL IT. INSPECT IT. TRY TO BREAK IT.</h2>
           <p>
-            Refract currently ships from source for Android 14 and newer. The
-            licensed Gemma model stays outside GitHub; place it at the documented
-            path before building.
+            The arm64 test build runs on Android 14 and newer and includes its
+            2.59 GB local model. GitHub caps individual release assets below the
+            assembled APK’s size, so download both parts and join them before
+            installing.
           </p>
         </div>
 
-        <pre tabindex="0"><code>git clone https://github.com/vorcigernix/refract.git
-cd refract/refract-keyboard
-
-# Add java/assets/models/gemma-4-E2B-it.litertlm
-./gradlew assembleDebug
-adb install -r build/outputs/apk/debug/RefractKeyboard-debug.apk</code></pre>
+        <pre tabindex="0"><code>cat RefractKeyboard-v0.1.0-debug.apk.part-* \
+  &gt; RefractKeyboard-v0.1.0-debug.apk
+shasum -a 256 -c SHA256SUMS
+adb install -r RefractKeyboard-v0.1.0-debug.apk</code></pre>
 
         <a
           class="install-action"
-          href="https://github.com/vorcigernix/refract#build"
+          href="https://github.com/vorcigernix/refract/releases/tag/v0.1.0-debug"
         >
-          Install guide ↗
+          Download test build ↗
         </a>
       </section>
 
