@@ -55,19 +55,13 @@ docs/architecture.md    Security boundary and validation notes
 
 The active implementation combines two source lines:
 
-1. **Conversation Stenography**, the original research prototype in this
-   repository. It established the encryption, authenticated conversation
-   chain, carrier encoding, and pairing protocol.
+1. **[Conversation Stenography](https://github.com/nethical6/conversation-steganography)**,
+   the original research prototype. It established the encryption,
+   authenticated conversation chain, carrier encoding, and pairing protocol.
 2. **[AOSP LatinIME](https://android.googlesource.com/platform/packages/inputmethods/LatinIME/+/refs/tags/android-17.0.0_r1)**,
    the Android keyboard engine, layouts, and native dictionary/proximity code.
    The imported baseline is Android 17 tag `android-17.0.0_r1`, commit
    `afe0d5c261c3a0c88b38894981a7b332da93e7dd`.
-
-An earlier Refract prototype was based on
-[FlorisBoard](https://github.com/florisboard/florisboard), commit
-`2a44855c7fcce943a2d3b2092fe45808037ad258`. That implementation has been
-retired, but the project remains credited here because it materially informed
-the first keyboard integration.
 
 The repository-level project is distributed under the [GNU GPL v3](LICENSE).
 Imported AOSP files retain their Apache License 2.0 notices in
