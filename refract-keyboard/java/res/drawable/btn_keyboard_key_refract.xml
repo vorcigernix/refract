@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Refract Keyboard — M3 Expressive letter/action key background.
+
+     State order matters: the first matching item wins, so the more specific
+     active/checkable states must precede the plain pressed/normal fallbacks.
+     Covers each state used by KeyboardView's existing state handling.
+
+     colorSurfaceBright keeps letter keys raised in both light and dark themes;
+     container ladder roles invert their visual direction between those themes.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Action keys (enter / go / send): emphasised tone AND pill silhouette. -->
+    <item android:state_active="true" android:state_pressed="true">
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_functional_corner_radius" />
+                <solid android:color="?attr/colorPrimary" />
+            </shape>
+        </inset>
+    </item>
+    <item android:state_active="true">
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_functional_corner_radius" />
+                <solid android:color="?attr/colorPrimaryContainer" />
+            </shape>
+        </inset>
+    </item>
+
+    <!-- Toggle keys (shift, symbols shift): pill, like their functional neighbours. -->
+    <item android:state_checkable="true" android:state_checked="true" android:state_pressed="true">
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_functional_corner_radius" />
+                <solid android:color="?attr/colorPrimary" />
+            </shape>
+        </inset>
+    </item>
+    <item android:state_checkable="true" android:state_pressed="true">
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_functional_corner_radius" />
+                <solid android:color="?attr/colorSecondaryContainer" />
+            </shape>
+        </inset>
+    </item>
+    <item android:state_checkable="true" android:state_checked="true">
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_functional_corner_radius" />
+                <solid android:color="?attr/colorSecondaryContainer" />
+            </shape>
+        </inset>
+    </item>
+    <item android:state_checkable="true">
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_functional_corner_radius" />
+                <solid android:color="?attr/colorSurfaceContainerHighest" />
+            </shape>
+        </inset>
+    </item>
+
+    <!-- Empty-background keys keep no fill, matching AOSP behaviour. -->
+    <item android:state_empty="true" android:state_pressed="true">
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_corner_radius" />
+                <solid android:color="?attr/colorSurfaceContainerHighest" />
+            </shape>
+        </inset>
+    </item>
+    <item android:state_empty="true" android:drawable="@android:color/transparent" />
+
+    <!-- Normal letter keys: rounded square, brightest surface. -->
+    <item android:state_pressed="true">
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_corner_radius" />
+                <solid android:color="?attr/colorSecondaryContainer" />
+            </shape>
+        </inset>
+    </item>
+    <item>
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_corner_radius" />
+                <solid android:color="?attr/colorSurfaceBright" />
+            </shape>
+        </inset>
+    </item>
+</selector>

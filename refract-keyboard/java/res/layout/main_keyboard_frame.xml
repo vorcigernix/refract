@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+**
+** Copyright 2014, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+-->
+
+<!--
+     Carries the keyboard's board colour. It belongs here rather than on InputView:
+     InputView fills the entire full-height IME window, so a background there covers
+     the whole screen. This view wraps its content, so it paints exactly the
+     keyboard. InputView.onApplyWindowInsets also applies the navigation-bar inset as
+     bottom padding to THIS view, which keeps that strip inside the painted area.
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:background="?attr/colorSurfaceContainer"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        style="?attr/suggestionStripViewStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/refract_toggle"
+            style="@style/Widget.Material3Expressive.Button.IconButton.Standard"
+            android:layout_width="@dimen/refract_toggle_size"
+            android:layout_height="@dimen/refract_toggle_size"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/refract_panel_margin"
+            android:layout_marginEnd="4dp"
+            android:contentDescription="@string/refract_private_mode"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            app:icon="@drawable/ic_refract_private"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="@dimen/refract_toggle_icon_size"
+            app:iconTint="@color/refract_toggle_icon_tint" />
+
+        <!-- To ensure that key preview popup is correctly placed when the current system locale is
+             one of RTL locales, layoutDirection="ltr" is needed. -->
+        <com.android.inputmethod.latin.suggestions.SuggestionStripView
+            android:id="@+id/suggestion_strip_view"
+            style="?attr/suggestionStripViewStyle"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/config_suggestions_strip_height"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:layoutDirection="ltr" />
+    </LinearLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/refract_private_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/refract_panel_margin"
+        android:layout_marginTop="@dimen/refract_panel_margin"
+        android:layout_marginEnd="@dimen/refract_panel_margin"
+        android:visibility="gone"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+        app:cardCornerRadius="@dimen/refract_panel_corner_radius"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/refract_panel_padding">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/refract_private_mode"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="?attr/colorPrimary" />
+
+            <!-- The draft itself. Recessed a tonal step below the card. -->
+            <TextView
+                android:id="@+id/refract_private_draft"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/refract_panel_spacing"
+                android:background="@drawable/refract_draft_field_background"
+                android:ellipsize="end"
+                android:gravity="start|top"
+                android:maxLines="3"
+                android:minHeight="72dp"
+                android:padding="@dimen/refract_panel_spacing"
+                android:text="@string/refract_private_draft_hint"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnSurface"
+                android:textIsSelectable="false" />
+
+            <!-- accessibilityLiveRegion so TalkBack announces generation progress.
+                 The old TextView was silent: status changed with no announcement. -->
+            <TextView
+                android:id="@+id/refract_private_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/refract_panel_spacing"
+                android:accessibilityLiveRegion="polite"
+                android:maxLines="2"
+                android:text="@string/refract_private_ready"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <com.google.android.material.button.MaterialButtonGroup
+                style="@style/Widget.Material3Expressive.MaterialButtonGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/refract_panel_spacing"
+                android:spacing="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/refract_settings"
+                    style="@style/Widget.Material3Expressive.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/refract_settings" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/refract_generate"
+                    style="@style/Widget.Material3Expressive.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:text="@string/refract_generate" />
+            </com.google.android.material.button.MaterialButtonGroup>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- To ensure that key preview popup is correctly placed when the current system locale is
+         one of RTL locales, layoutDirection="ltr" is needed in the SDK version 17+. -->
+    <com.android.inputmethod.keyboard.MainKeyboardView
+        android:id="@+id/keyboard_view"
+        android:layoutDirection="ltr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>

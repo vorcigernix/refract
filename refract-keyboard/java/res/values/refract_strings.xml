@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="refract_app_name" translatable="false">Refract Keyboard</string>
+    <string name="refract_private_mode" translatable="false">Private</string>
+    <string name="refract_private_exit" translatable="false">Exit private</string>
+    <string name="refract_private_draft_hint" translatable="false">Private draft — plaintext stays inside the keyboard</string>
+    <string name="refract_private_ready" translatable="false">Write privately, then generate an authenticated carrier.</string>
+    <string name="refract_settings" translatable="false">Settings</string>
+    <string name="refract_pair" translatable="false">Pair</string>
+    <string name="refract_generate" translatable="false">Generate</string>
+    <string name="refract_product_description" translatable="false">A private writing layer inside a lean Android keyboard. The host app receives only the generated carrier text.</string>
+    <string name="refract_enable_keyboard" translatable="false">Enable keyboard</string>
+    <string name="refract_choose_keyboard" translatable="false">Choose keyboard</string>
+    <string name="refract_pairing_title" translatable="false">Private conversations</string>
+    <string name="refract_pairing_description" translatable="false">Pair in person with two public-key QR codes. Neither QR contains the conversation key; compare all five safety words before finishing.</string>
+    <string name="refract_start_pairing" translatable="false">Start pairing</string>
+    <string name="refract_join_pairing" translatable="false">Join someone</string>
+    <string name="refract_model_title" translatable="false">Local carrier model</string>
+    <string name="refract_import_model" translatable="false">Import Gemma model</string>
+    <string name="refract_gpu" translatable="false">GPU</string>
+    <string name="refract_cpu" translatable="false">CPU</string>
+    <string name="refract_preload" translatable="false">Warm up when the keyboard opens</string>
+    <string name="refract_security_note" translatable="false">Prototype security: X25519 and HKDF derive the conversation key locally; Android Keystore protects it at rest. Receiving and decoding are not implemented yet.</string>
+</resources>

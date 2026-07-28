@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Refract Keyboard — M3 Expressive more-keys panel surface.
+
+     Uses a themed shape, so the panel follows dynamic colour without shipping a
+     baked bitmap per density.
+-->
+<shape
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/refract_popup_panel_corner_radius" />
+    <solid android:color="?attr/colorSurfaceContainerHighest" />
+</shape>

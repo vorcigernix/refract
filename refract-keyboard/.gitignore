@@ -1,0 +1,8 @@
+# Gradle
+.externalNativeBuild/
+.cxx/
+.gradle/
+.idea/
+LatinIME.iml
+build/
+local.properties

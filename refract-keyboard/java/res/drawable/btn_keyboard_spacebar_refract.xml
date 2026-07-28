@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Refract Keyboard: M3 Expressive spacebar background.
+
+     Bright like the letter keys because it is a primary target, with the pill
+     radius its long aspect ratio calls for.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_functional_corner_radius" />
+                <solid android:color="?attr/colorSecondaryContainer" />
+            </shape>
+        </inset>
+    </item>
+    <item>
+        <inset
+            android:insetLeft="@dimen/refract_key_inset_horizontal"
+            android:insetRight="@dimen/refract_key_inset_horizontal"
+            android:insetTop="@dimen/refract_key_inset_vertical"
+            android:insetBottom="@dimen/refract_key_inset_vertical">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_functional_corner_radius" />
+                <solid android:color="?attr/colorSurfaceBright" />
+            </shape>
+        </inset>
+    </item>
+</selector>

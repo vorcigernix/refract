@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Refract Keyboard — M3 Expressive key metrics.
+
+     Insets create the visual gap between keys without changing touch targets:
+     they shrink only the drawn shape, not the key's hit rect.
+-->
+<resources>
+    <!-- Drawn gap around each key, inside its touch cell. -->
+    <dimen name="refract_key_inset_horizontal">3dp</dimen>
+    <dimen name="refract_key_inset_vertical">4dp</dimen>
+
+    <!-- Key and popup shapes. -->
+    <dimen name="refract_key_corner_radius">16dp</dimen>
+    <dimen name="refract_key_functional_corner_radius">28dp</dimen>
+    <dimen name="refract_key_preview_corner_radius">20dp</dimen>
+    <dimen name="refract_popup_panel_corner_radius">24dp</dimen>
+    <dimen name="refract_suggestion_corner_radius">18dp</dimen>
+
+    <!-- Private panel. -->
+    <dimen name="refract_panel_corner_radius">28dp</dimen>
+    <dimen name="refract_draft_field_corner_radius">20dp</dimen>
+    <dimen name="refract_panel_margin">8dp</dimen>
+    <dimen name="refract_panel_padding">16dp</dimen>
+    <dimen name="refract_panel_spacing">12dp</dimen>
+
+    <!-- Private-mode toggle. -->
+    <dimen name="refract_toggle_size">44dp</dimen>
+    <dimen name="refract_toggle_icon_size">20dp</dimen>
+</resources>

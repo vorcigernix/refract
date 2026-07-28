@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Refract Keyboard: tinted wrapper over the AOSP white icon asset.
+     Appears on functional/letter keys, so it takes the on-surface-variant colour. -->
+<bitmap
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/sym_keyboard_shift_locked_refract_base"
+    android:tint="?attr/colorOnSurfaceVariant" />

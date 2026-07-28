@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+**
+** Copyright 2008, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="english_ime_input_options">Input options</string>
+
+    <string name="auto_correction_threshold_mode_off">Off</string>
+
+    <string name="auto_correction_threshold_mode_modest">Modest</string>
+
+    <string name="auto_correction_threshold_mode_aggressive">Aggressive</string>
+
+    <string name="auto_correction_threshold_mode_very_aggressive">Very aggressive</string>
+
+    <string name="language_selection_title">Languages</string>
+
+    <string name="subtype_en_GB">English (UK)</string>
+
+    <string name="subtype_en_US">English (US)</string>
+
+    <string name="subtype_es_US">Spanish (US)</string>
+
+    <string name="subtype_hi_ZZ">Hinglish</string>
+
+    <string name="subtype_sr_ZZ">Serbian (Latin)</string>
+
+    <string name="subtype_with_layout_en_GB">English (UK) (<xliff:g id="KEYBOARD_LAYOUT" example="QWERTY">%s</xliff:g>)</string>
+
+    <string name="subtype_with_layout_en_US">English (US) (<xliff:g id="KEYBOARD_LAYOUT" example="QWERTY">%s</xliff:g>)</string>
+
+    <string name="subtype_with_layout_es_US">Spanish (US) (<xliff:g id="KEYBOARD_LAYOUT" example="QWERTY">%s</xliff:g>)</string>
+
+    <string name="subtype_with_layout_hi_ZZ">Hinglish (<xliff:g id="KEYBOARD_LAYOUT" example="QWERTY">%s</xliff:g>)</string>
+
+    <string name="subtype_with_layout_sr_ZZ">Serbian (<xliff:g id="KEYBOARD_LAYOUT" example="QWERTY">%s</xliff:g>)</string>
+
+    <string name="subtype_generic_traditional"><xliff:g id="LANGUAGE_NAME" example="Nepali">%s</xliff:g> (Traditional)</string>
+
+    <string name="subtype_generic_compact"><xliff:g id="LANGUAGE_NAME" example="Hindi">%s</xliff:g> (Compact)</string>
+
+    <string name="subtype_no_language">No language (Alphabet)</string>
+
+    <string name="subtype_no_language_qwerty">Alphabet (QWERTY)</string>
+
+    <string name="subtype_no_language_qwertz">Alphabet (QWERTZ)</string>
+
+    <string name="subtype_no_language_azerty">Alphabet (AZERTY)</string>
+
+    <string name="subtype_no_language_dvorak">Alphabet (Dvorak)</string>
+
+    <string name="subtype_no_language_colemak">Alphabet (Colemak)</string>
+
+    <string name="subtype_no_language_pcqwerty">Alphabet (PC)</string>
+
+    <string name="subtype_emoji">Emoji</string>
+
+    <string name="subtype_locale">Language</string>
+</resources>

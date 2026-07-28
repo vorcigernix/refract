@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Refract Keyboard — M3 Expressive more-keys popup key background.
+
+     Keys inside the more-keys panel are transparent until pressed; the panel
+     itself supplies the surface.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <inset
+            android:insetLeft="2dp"
+            android:insetRight="2dp"
+            android:insetTop="2dp"
+            android:insetBottom="2dp">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_key_corner_radius" />
+                <solid android:color="?attr/colorSecondaryContainer" />
+            </shape>
+        </inset>
+    </item>
+    <item android:drawable="@android:color/transparent" />
+</selector>

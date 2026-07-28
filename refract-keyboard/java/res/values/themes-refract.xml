@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Refract Keyboard — Material 3 Expressive theme foundation.
+
+     Two themes live here:
+
+     * Theme.Refract          — the settings Activity.
+     * Theme.Refract.Keyboard — the IME. This is the style that
+       KeyboardSwitcher applies it via ContextThemeWrapper. Because it inherits from a
+       Material3Expressive theme, ?attr/colorSurfaceContainerHigh and friends
+       resolve inside the keyboard views and drawables.
+
+     Both are DayNight, so light/dark follows the system with no values-night
+     directory. Dynamic color is applied at runtime rather than through a
+     DynamicColors.* theme parent, so these definitions serve both the dynamic
+     and the static-fallback case:
+
+       * Activity — DynamicColors.applyToActivitiesIfAvailable()
+       * IME      — DynamicColors.wrapContextIfAvailable() in KeyboardSwitcher
+-->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- ===================== Settings Activity ===================== -->
+
+    <style name="Theme.Refract" parent="Theme.Material3Expressive.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <!-- ===================== Keyboard (IME) ===================== -->
+
+    <!--
+         Inherits the Material3Expressive DayNight palette so M3 colour roles are
+         resolvable, then layers the AOSP keyboard style pointers on top. The icon
+         items are declared inline rather than via parent="KeyboardIcons.*" because
+         a style has only one parent and we need the Material palette in the chain.
+    -->
+    <style name="KeyboardTheme.Refract" parent="Theme.Material3Expressive.DayNight">
+        <item name="inputViewStyle">@style/InputView.Refract</item>
+        <item name="keyboardStyle">@style/Keyboard.Refract</item>
+        <item name="keyboardViewStyle">@style/KeyboardView.Refract</item>
+        <item name="mainKeyboardViewStyle">@style/MainKeyboardView.Refract</item>
+        <item name="emojiPalettesViewStyle">@style/EmojiPalettesView.Refract</item>
+        <item name="moreKeysKeyboardStyle">@style/MoreKeysKeyboard.Refract</item>
+        <item name="moreKeysKeyboardViewStyle">@style/MoreKeysKeyboardView.Refract</item>
+        <item name="moreKeysKeyboardViewForActionStyle">@style/MoreKeysKeyboardView.Refract.Action</item>
+        <item name="suggestionStripViewStyle">@style/SuggestionStripView.Refract</item>
+        <item name="suggestionWordStyle">@style/SuggestionWord.Refract</item>
+
+        <!-- Key icons. Tinted at draw time via ?attr/colorOnSurface, so one set
+             serves both light and dark instead of the three legacy sets. -->
+        <item name="iconShiftKey">@drawable/sym_keyboard_shift_refract</item>
+        <item name="iconDeleteKey">@drawable/sym_keyboard_delete_refract</item>
+        <item name="iconSettingsKey">@drawable/sym_keyboard_settings_refract</item>
+        <item name="iconSpaceKey">@null</item>
+        <item name="iconEnterKey">@drawable/sym_keyboard_return_refract</item>
+        <item name="iconGoKey">@drawable/sym_keyboard_go_refract</item>
+        <item name="iconSearchKey">@drawable/sym_keyboard_search_refract</item>
+        <item name="iconSendKey">@drawable/sym_keyboard_send_refract</item>
+        <item name="iconNextKey">@drawable/sym_keyboard_next_refract</item>
+        <item name="iconDoneKey">@drawable/sym_keyboard_done_refract</item>
+        <item name="iconPreviousKey">@drawable/sym_keyboard_previous_refract</item>
+        <item name="iconTabKey">@drawable/sym_keyboard_tab_refract</item>
+        <item name="iconShortcutKey">@drawable/sym_keyboard_voice_refract</item>
+        <item name="iconSpaceKeyForNumberLayout">@drawable/sym_keyboard_space_refract</item>
+        <item name="iconShiftKeyShifted">@drawable/sym_keyboard_shift_locked_refract</item>
+        <item name="iconShortcutKeyDisabled">@drawable/sym_keyboard_voice_off_refract</item>
+        <item name="iconLanguageSwitchKey">@drawable/sym_keyboard_language_switch_refract</item>
+        <item name="iconZwnjKey">@drawable/sym_keyboard_zwnj_refract</item>
+        <item name="iconZwjKey">@drawable/sym_keyboard_zwj_refract</item>
+        <item name="iconEmojiActionKey">@drawable/sym_keyboard_smiley_refract</item>
+        <item name="iconEmojiNormalKey">@drawable/sym_keyboard_smiley_refract</item>
+    </style>
+
+    <!--
+         Deliberately NO background. InputView fills the whole IME window, which spans
+         the full display height, with main_keyboard_frame pinned to its bottom by
+         layout_gravity. Painting InputView therefore paints the entire screen, not
+         just the keyboard.
+
+         The board colour and the navigation-bar inset padding both live on
+         main_keyboard_frame instead, so the padded strip falls inside a view that
+         actually paints it.
+    -->
+    <style name="InputView.Refract" parent="InputView" />
+
+    <!-- Inherits gaps, padding and touch correction from Keyboard so the
+         per-form-factor overrides in values-sw600dp etc. keep applying. The
+         rounded M3 key look comes from insets in the key drawables instead. -->
+    <style name="Keyboard.Refract" parent="Keyboard">
+        <!-- Must match the sole themeId enum in attrs.xml. -->
+        <item name="themeId">Refract</item>
+    </style>
+
+    <!--
+         Colour roles, chosen so the key grid reads as a tonal hierarchy:
+           letter keys      surfaceContainerHigh   (raised above the board)
+           functional keys  surfaceContainerHighest (shift, delete, symbols)
+           action key       primaryContainer        (enter/go/send)
+           board            surfaceContainer
+    -->
+    <style name="KeyboardView.Refract" parent="KeyboardView">
+        <!--
+             Text metrics. These are NOT optional and NOT inherited from the
+             "KeyboardView" base style: that base sets padding and gesture config
+             only.
+
+             Omitting them is silent and total: KeyVisualAttributes reads the sizes
+             as 0, KeyDrawParams.selectTextSizeFromDimensionOrRatio keeps 0, and
+             every key label is drawn at font size 0: present, correctly coloured,
+             and completely invisible. The fraction resources themselves are plain
+             config values with per-form-factor overrides, so they are reused rather
+             than duplicated.
+        -->
+        <item name="keyLetterSize">@fraction/config_key_letter_ratio_refract</item>
+        <item name="keyLabelSize">@fraction/config_key_label_ratio_refract</item>
+        <item name="keyHintLetterRatio">@fraction/config_key_hint_letter_ratio_refract</item>
+        <item name="keyShiftedLetterHintRatio">@fraction/config_key_shifted_letter_hint_ratio_refract</item>
+        <item name="keyLargeLetterRatio">@fraction/config_key_large_letter_ratio_refract</item>
+        <item name="keyHintLabelRatio">@fraction/config_key_hint_label_ratio_refract</item>
+        <item name="keyLabelOffCenterRatio">-80%</item>
+        <item name="keyHintLabelOffCenterRatio">300%</item>
+        <item name="keyLabelFlags">alignHintLabelToBottom</item>
+        <item name="spacebarIconWidthRatio">0.9</item>
+        <!-- No popup hint letter, matching modern keyboards. -->
+        <item name="keyPopupHintLetter"></item>
+
+        <item name="android:background">?attr/colorSurfaceContainer</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_refract</item>
+        <item name="functionalKeyBackground">@drawable/btn_keyboard_key_functional_refract</item>
+        <item name="spacebarBackground">@drawable/btn_keyboard_spacebar_refract</item>
+        <item name="keyTextColor">?attr/colorOnSurface</item>
+        <item name="keyTextInactivatedColor">?attr/colorOnSurfaceVariant</item>
+        <item name="functionalTextColor">?attr/colorOnSurfaceVariant</item>
+        <item name="keyHintLetterColor">?attr/colorOnSurfaceVariant</item>
+        <item name="keyHintLabelColor">?attr/colorOnSurfaceVariant</item>
+        <item name="keyShiftedLetterHintInactivatedColor">?attr/colorOnSurfaceVariant</item>
+        <item name="keyShiftedLetterHintActivatedColor">?attr/colorOnSurface</item>
+        <item name="keyPreviewTextColor">?attr/colorOnSurface</item>
+        <item name="keyTypeface">normal</item>
+        <!-- Negative disables the legacy text shadow layer; M3 uses no shadow. -->
+        <item name="keyTextShadowRadius">-1.0</item>
+    </style>
+
+    <style name="MainKeyboardView.Refract" parent="KeyboardView.Refract">
+        <item name="moreKeysKeyboardForActionLayout">@layout/more_keys_keyboard_for_action_refract</item>
+        <item name="keyPreviewBackground">@drawable/keyboard_key_feedback_refract</item>
+        <item name="keyPreviewHeight">@dimen/config_key_preview_height_refract</item>
+        <item name="keyPreviewOffset">@dimen/config_key_preview_offset_refract</item>
+        <item name="keyPreviewShowUpAnimator">@anim/key_preview_show_up_refract</item>
+        <item name="keyPreviewDismissAnimator">@anim/key_preview_dismiss_refract</item>
+        <item name="gestureFloatingPreviewTextColor">?attr/colorOnPrimaryContainer</item>
+        <item name="gestureFloatingPreviewColor">?attr/colorPrimaryContainer</item>
+        <item name="gestureTrailColor">?attr/colorPrimary</item>
+        <item name="slidingKeyInputPreviewColor">?attr/colorPrimary</item>
+        <item name="languageOnSpacebarTextColor">?attr/colorOnSurfaceVariant</item>
+        <item name="languageOnSpacebarTextShadowRadius">-1.0</item>
+    </style>
+
+    <!-- EmojiPalettesView is not a KeyboardView subclass, but views inside it
+         (the delete button) still read themed KeyboardView attributes. -->
+    <style name="EmojiPalettesView.Refract" parent="MainKeyboardView.Refract">
+        <item name="categoryIndicatorEnabled">false</item>
+        <item name="categoryPageIndicatorColor">?attr/colorPrimary</item>
+        <item name="categoryPageIndicatorBackground">?attr/colorSurfaceContainerHighest</item>
+        <item name="iconEmojiRecentsTab">@drawable/ic_emoji_recents_refract</item>
+        <item name="iconEmojiCategory1Tab">@drawable/ic_emoji_people_refract</item>
+        <item name="iconEmojiCategory2Tab">@drawable/ic_emoji_objects_refract</item>
+        <item name="iconEmojiCategory3Tab">@drawable/ic_emoji_nature_refract</item>
+        <item name="iconEmojiCategory4Tab">@drawable/ic_emoji_places_refract</item>
+        <item name="iconEmojiCategory5Tab">@drawable/ic_emoji_symbols_refract</item>
+        <item name="iconEmojiCategory6Tab">@drawable/ic_emoji_emoticons_refract</item>
+        <item name="iconEmojiCategory7Tab">@drawable/ic_emoji_flag_refract</item>
+        <item name="iconEmojiCategory8Tab">@drawable/ic_emoji_people_refract</item>
+        <item name="iconEmojiCategory9Tab">@drawable/ic_emoji_nature_refract</item>
+        <item name="iconEmojiCategory10Tab">@drawable/ic_emoji_food_refract</item>
+        <item name="iconEmojiCategory11Tab">@drawable/ic_emoji_places_refract</item>
+        <item name="iconEmojiCategory12Tab">@drawable/ic_emoji_activity_refract</item>
+        <item name="iconEmojiCategory13Tab">@drawable/ic_emoji_objects_refract</item>
+        <item name="iconEmojiCategory14Tab">@drawable/ic_emoji_symbols_refract</item>
+        <item name="iconEmojiCategory15Tab">@drawable/ic_emoji_flag_refract</item>
+        <item name="iconEmojiCategory16Tab">@drawable/ic_emoji_people_refract</item>
+    </style>
+
+    <style name="MoreKeysKeyboard.Refract" parent="Keyboard.Refract">
+        <item name="keyboardTopPadding">0%p</item>
+        <item name="keyboardBottomPadding">0%p</item>
+        <item name="horizontalGap">0%p</item>
+        <item name="touchPositionCorrectionData">@null</item>
+    </style>
+
+    <style name="MoreKeysKeyboardView.Refract" parent="KeyboardView.Refract">
+        <item name="android:background">@drawable/keyboard_popup_panel_background_refract</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_popup_refract</item>
+        <item name="divider">@null</item>
+        <item name="keyTypeface">normal</item>
+        <item name="verticalCorrection">@dimen/config_more_keys_keyboard_vertical_correction_refract</item>
+    </style>
+
+    <style name="MoreKeysKeyboardView.Refract.Action" parent="MoreKeysKeyboardView.Refract">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_popup_action_refract</item>
+        <item name="divider">@null</item>
+        <item name="keyLabelFlags">keepBackgroundAspectRatio</item>
+    </style>
+
+    <style name="SuggestionStripView.Refract" parent="KeyboardView.Refract">
+        <item name="suggestionsCountInStrip">@integer/config_suggestions_count_in_strip</item>
+        <item name="centerSuggestionPercentile">@fraction/config_center_suggestion_percentile</item>
+        <item name="maxMoreSuggestionsRow">@integer/config_max_more_suggestions_row</item>
+        <item name="minMoreSuggestionsWidth">@fraction/config_min_more_suggestions_width</item>
+        <item name="android:background">?attr/colorSurfaceContainer</item>
+        <item name="android:src">@null</item>
+        <item name="suggestionStripOptions">autoCorrectBold|validTypedWordBold</item>
+        <item name="colorValidTypedWord">?attr/colorOnSurface</item>
+        <item name="colorTypedWord">?attr/colorOnSurface</item>
+        <item name="colorAutoCorrect">?attr/colorPrimary</item>
+        <item name="colorSuggested">?attr/colorOnSurfaceVariant</item>
+        <item name="alphaObsoleted">70%</item>
+    </style>
+
+    <style name="SuggestionWord.Refract" parent="SuggestionWord">
+        <item name="android:background">@drawable/btn_suggestion_refract</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+</resources>

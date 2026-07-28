@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Refract Keyboard: tinted wrapper over the AOSP white icon asset.
+     Appears on the action key, so it takes the primary-container content colour.
+     One tinted drawable replaces the legacy per-theme light/dark icon sets. -->
+<bitmap
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/sym_keyboard_return_refract_base"
+    android:tint="?attr/colorOnPrimaryContainer" />

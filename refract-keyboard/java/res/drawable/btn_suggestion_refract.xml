@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Refract Keyboard — M3 Expressive suggestion word background.
+
+     Transparent at rest so the strip reads as one surface; a tonal pill appears
+     on press.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <inset
+            android:insetLeft="2dp"
+            android:insetRight="2dp"
+            android:insetTop="6dp"
+            android:insetBottom="6dp">
+            <shape android:shape="rectangle">
+                <corners android:radius="@dimen/refract_suggestion_corner_radius" />
+                <solid android:color="?attr/colorSecondaryContainer" />
+            </shape>
+        </inset>
+    </item>
+    <item android:drawable="@android:color/transparent" />
+</selector>
