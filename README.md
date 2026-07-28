@@ -27,8 +27,12 @@ yet.
 
 The [v0.1.0 debug release](https://github.com/vorcigernix/refract/releases/tag/v0.1.0-debug)
 targets arm64 devices running Android 14 or newer and includes the local model.
-The assembled APK is 2.66 GB, so GitHub hosts it as two parts. Download both
-parts and `SHA256SUMS`, then run:
+About 2.59 GB of the 2.66 GB APK is the bundled Gemma 4 E2B model. Refract
+uses it to generate ordinary-looking carrier text entirely on the phone; the
+keyboard and runtime account for the remaining roughly 72 MB.
+
+GitHub hosts the APK as two parts. Download both parts and `SHA256SUMS`, then
+run:
 
 ```sh
 cat RefractKeyboard-v0.1.0-debug.apk.part-* > RefractKeyboard-v0.1.0-debug.apk
