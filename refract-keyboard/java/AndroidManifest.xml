@@ -23,6 +23,13 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="false">
 
+        <uses-native-library
+            android:name="libvndksupport.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libOpenCL.so"
+            android:required="false" />
+
         <service
             android:name=".LatinIME"
             android:exported="true"
@@ -46,5 +53,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/refract_file_paths" />
+        </provider>
     </application>
 </manifest>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Refract Keyboard — shared content view for the pairing dialogs.
+
+     Replaces two ad-hoc constructions: a bare ImageView passed straight to
+     setView() (hard white block, full bleed, no rounding) for step 1, and a
+     programmatically built LinearLayout for step 2. One layout keeps both steps
+     consistent.
+
+     Share lives HERE, not as the dialog's neutral button. Three buttons plus labels
+     like "Words match · finish" overflow the M3 dialog button bar, which is a single
+     non-wrapping row, so the neutral button got clipped to invisibility. It also
+     belongs with the code it acts on rather than beside the dialog's decisions.
+
+     ScrollView root because the QR is min(screenWidth, 360dp); with body text and a
+     safety phrase the content can exceed a short screen.
+-->
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipToPadding="false"
+    android:paddingStart="@dimen/refract_dialog_padding"
+    android:paddingTop="@dimen/refract_panel_spacing"
+    android:paddingEnd="@dimen/refract_dialog_padding">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/refract_dialog_name_layout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/refract_panel_spacing"
+            android:hint="@string/refract_display_name_label"
+            android:visibility="gone">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/refract_dialog_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="textPersonName|textCapWords"
+                android:maxLength="@integer/refract_display_name_max_length"
+                android:selectAllOnFocus="true" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- QR keeps a white field with a quiet zone: scanners need the contrast,
+             so this is the one place the theme palette is deliberately not used.
+             The card supplies rounding so it sits on the dialog surface properly. -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/refract_dialog_qr_card"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="@dimen/refract_draft_field_corner_radius"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <ImageView
+                android:id="@+id/refract_dialog_qr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/refract_pair_qr_description"
+                android:padding="@dimen/refract_panel_spacing" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Safety phrase: the thing users must actually read aloud, so it gets the
+             largest type in the dialog. Hidden on step 1, where none exists yet. -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/refract_dialog_safety"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/refract_panel_spacing"
+            android:gravity="center_horizontal"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textColor="?attr/colorPrimary"
+            android:visibility="gone" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/refract_dialog_body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/refract_panel_spacing"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/refract_dialog_share"
+            style="@style/Widget.Material3Expressive.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginTop="@dimen/refract_panel_spacing"
+            android:text="@string/refract_share"
+            app:icon="@drawable/ic_refract_share" />
+    </LinearLayout>
+</ScrollView>

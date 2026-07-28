@@ -1,17 +1,15 @@
 package app.refract.keyboard.protocol
 
 import java.io.ByteArrayOutputStream
-import java.math.BigInteger
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.MessageDigest
 import java.security.PrivateKey
+import java.security.PublicKey
 import java.security.SecureRandom
-import java.security.interfaces.XECPublicKey
-import java.security.spec.NamedParameterSpec
-import java.security.spec.XECPublicKeySpec
+import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import java.util.Base64
 import javax.crypto.KeyAgreement
@@ -596,14 +594,11 @@ private data class EphemeralX25519KeyPair(
 
 private fun generateX25519KeyPair(random: SecureRandom): EphemeralX25519KeyPair {
     val generator = KeyPairGenerator.getInstance(XDH)
-    generator.initialize(NamedParameterSpec.X25519, random)
+    generator.initialize(X25519_KEY_SIZE_BITS, random)
     val keyPair = generator.generateKeyPair()
-    val publicKey =
-        keyPair.public as? XECPublicKey
-            ?: error("The Android XDH provider did not return an X25519 public key.")
     return EphemeralX25519KeyPair(
         privateKey = keyPair.private,
-        publicKey = encodeX25519PublicKey(publicKey),
+        publicKey = encodeX25519PublicKey(keyPair.public),
     )
 }
 
@@ -617,10 +612,7 @@ private fun computeX25519SharedSecret(
     val publicKey =
         KeyFactory.getInstance(XDH)
             .generatePublic(
-                XECPublicKeySpec(
-                    NamedParameterSpec.X25519,
-                    BigInteger(1, peerPublicKey.reversedArray()),
-                )
+                X509EncodedKeySpec(X25519_X509_PREAMBLE + peerPublicKey)
             )
     val agreement = KeyAgreement.getInstance(XDH)
     agreement.init(privateKey)
@@ -632,23 +624,20 @@ private fun computeX25519SharedSecret(
     }
 }
 
-private fun encodeX25519PublicKey(publicKey: XECPublicKey): ByteArray {
-    val unsignedBigEndian =
-        publicKey.u.toByteArray().let { encoded ->
-            if (encoded.size > 1 && encoded[0].toInt() == 0) {
-                encoded.copyOfRange(1, encoded.size)
-            } else {
-                encoded
-            }
-        }
-    require(unsignedBigEndian.size <= X25519_KEY_SIZE) {
+private fun encodeX25519PublicKey(publicKey: PublicKey): ByteArray {
+    require(publicKey.format == "X.509") {
         "The Android XDH provider returned an invalid X25519 public key."
     }
-    return ByteArray(X25519_KEY_SIZE).also { littleEndian ->
-        unsignedBigEndian.forEachIndexed { index, byte ->
-            littleEndian[unsignedBigEndian.lastIndex - index] = byte
-        }
+    val encoded = publicKey.encoded
+    require(
+        encoded.size == X25519_X509_PREAMBLE.size + X25519_KEY_SIZE &&
+            encoded
+                .copyOfRange(0, X25519_X509_PREAMBLE.size)
+                .contentEquals(X25519_X509_PREAMBLE)
+    ) {
+        "The Android XDH provider returned an invalid X25519 public key."
     }
+    return encoded.copyOfRange(X25519_X509_PREAMBLE.size, encoded.size)
 }
 
 private fun encodeIdentifier(value: ByteArray): String =
@@ -668,6 +657,7 @@ private const val FORMAT_VERSION: Byte = 2
 private const val CONVERSATION_ID_SIZE = 16
 private const val SENDER_ID_SIZE = 12
 private const val X25519_KEY_SIZE = 32
+private const val X25519_KEY_SIZE_BITS = 255
 private const val HASH_SIZE = 32
 private const val CONFIRMATION_TAG_SIZE = 16
 private const val MAX_NAME_BYTES = 48
@@ -689,6 +679,21 @@ private const val HMAC_SHA256 = "HmacSHA256"
 private const val XDH = "XDH"
 private const val SAFETY_WORD_COUNT = 5
 private const val SAFETY_WORD_MASK = 0x3f
+private val X25519_X509_PREAMBLE =
+    byteArrayOf(
+        0x30,
+        0x2a,
+        0x30,
+        0x05,
+        0x06,
+        0x03,
+        0x2b,
+        0x65,
+        0x6e,
+        0x03,
+        0x21,
+        0x00,
+    )
 private val ENCODER = Base64.getUrlEncoder().withoutPadding()
 private val DECODER = Base64.getUrlDecoder()
 private val INVITE_HASH_DOMAIN =

@@ -27,4 +27,8 @@
     <!-- Private-mode toggle. -->
     <dimen name="refract_toggle_size">44dp</dimen>
     <dimen name="refract_toggle_icon_size">20dp</dimen>
+
+    <!-- Horizontal inset for custom dialog content, matching the M3 dialog gutter so
+         the QR card and body text line up with the title and buttons. -->
+    <dimen name="refract_dialog_padding">24dp</dimen>
 </resources>

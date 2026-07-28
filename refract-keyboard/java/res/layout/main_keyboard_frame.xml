@@ -92,7 +92,7 @@
             android:orientation="vertical"
             android:padding="@dimen/refract_panel_padding">
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/refract_private_mode"
@@ -100,7 +100,7 @@
                 android:textColor="?attr/colorPrimary" />
 
             <!-- The draft itself. Recessed a tonal step below the card. -->
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/refract_private_draft"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -118,7 +118,7 @@
 
             <!-- accessibilityLiveRegion so TalkBack announces generation progress.
                  The old TextView was silent: status changed with no announcement. -->
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/refract_private_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

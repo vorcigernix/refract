@@ -1,30 +1,34 @@
 package app.refract.keyboard
 
-import android.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.color.DynamicColors
+import android.content.ClipData
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
-import android.provider.OpenableColumns
 import android.provider.Settings
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioGroup
-import android.widget.ScrollView
-import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
+import androidx.core.widget.doAfterTextChanged
 import app.refract.keyboard.protocol.PairingEstablishedSession
 import app.refract.keyboard.protocol.PairingInitiatorSession
 import app.refract.keyboard.protocol.PairingInvite
 import app.refract.keyboard.protocol.PairingResponderSession
 import com.android.inputmethod.latin.R
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.checkbox.MaterialCheckBox
+import com.google.android.material.color.DynamicColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import com.google.android.material.textview.MaterialTextView
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
@@ -34,18 +38,13 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import java.io.File
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-import java.util.concurrent.Executors
+
+internal const val ACTION_START_PAIRING = "app.refract.keyboard.action.START_PAIRING"
 
 /**
  * Focused Refract configuration, independent of the LatinIME settings UI.
  *
- * Extends [AppCompatActivity] because the Material 3 Expressive theme
- * (`Theme.Refract`) inherits from an AppCompat theme, which a plain
- * `android.app.Activity` cannot host. The view tree here is still hand-built from
- * platform widgets; converting it to Material components is a later phase.
+ * Uses Material 3 components and activity result contracts.
  */
 class RefractSettingsActivity : AppCompatActivity() {
     private lateinit var repository: ConversationRepository
@@ -53,23 +52,20 @@ class RefractSettingsActivity : AppCompatActivity() {
     private lateinit var scanner: GmsBarcodeScanner
 
     private lateinit var conversationsView: LinearLayout
-    private lateinit var keyboardStatus: TextView
-    private lateinit var modelStatus: TextView
-    private lateinit var operationStatus: TextView
-    private lateinit var preloadModel: CheckBox
+    private lateinit var keyboardStatus: MaterialTextView
+    private lateinit var modelStatus: MaterialTextView
+    private lateinit var operationStatus: MaterialTextView
+    private lateinit var preloadModel: MaterialCheckBox
     private lateinit var backend: RadioGroup
 
-    private val worker = Executors.newSingleThreadExecutor()
     private var pendingInitiator: PairingInitiatorSession? = null
     private var pendingResponder: PairingResponderSession? = null
+    private var finishAfterPairing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Overlays the wallpaper-derived palette onto Theme.Refract's M3 colour
-        // roles. Must run before setContentView so inflation sees the final theme.
-        // No-op below API 31 or where no dynamic palette exists, leaving the static
-        // Theme.Material3Expressive.DayNight colours in place.
         DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, true)
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         title = getString(R.string.refract_app_name)
         setContentView(R.layout.refract_settings_activity)
@@ -92,38 +88,21 @@ class RefractSettingsActivity : AppCompatActivity() {
         preloadModel = findViewById(R.id.refract_preload_model)
         backend = findViewById(R.id.refract_backend)
 
-        findViewById<Button>(R.id.refract_enable_keyboard).setOnClickListener {
+        findViewById<MaterialButton>(R.id.refract_enable_keyboard).setOnClickListener {
             startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
         }
-        findViewById<Button>(R.id.refract_choose_keyboard).setOnClickListener {
+        findViewById<MaterialButton>(R.id.refract_choose_keyboard).setOnClickListener {
             getSystemService(InputMethodManager::class.java).showInputMethodPicker()
         }
-        findViewById<Button>(R.id.refract_start_pairing).setOnClickListener {
-            promptIdentity(
-                title = "Start a private conversation",
-                aliasDefault = "",
-            ) { alias, displayName ->
-                startPairing(alias, displayName)
-            }
+        findViewById<MaterialButton>(R.id.refract_start_pairing).setOnClickListener {
+            runCatching { startPairing(pairingName()) }
+                .onFailure(::showError)
         }
-        findViewById<Button>(R.id.refract_join_pairing).setOnClickListener {
+        findViewById<MaterialButton>(R.id.refract_join_pairing).setOnClickListener {
             scanCode { encoded ->
                 val invitation = PairingInvite.decode(encoded)
-                promptIdentity(
-                    title = "Join ${invitation.inviterName}",
-                    aliasDefault = invitation.inviterName,
-                ) { alias, displayName ->
-                    respondToInvitation(invitation, alias, displayName)
-                }
+                respondToInvitation(invitation, pairingName())
             }
-        }
-        findViewById<Button>(R.id.refract_import_model).setOnClickListener {
-            startActivityForResult(
-                Intent(Intent.ACTION_OPEN_DOCUMENT)
-                    .addCategory(Intent.CATEGORY_OPENABLE)
-                    .setType("*/*"),
-                REQUEST_MODEL,
-            )
         }
 
         preloadModel.isChecked = preferences.preloadModel
@@ -144,6 +123,15 @@ class RefractSettingsActivity : AppCompatActivity() {
                     KeyboardPreferences.RuntimeBackend.GPU
                 }
         }
+
+        if (savedInstanceState == null && intent.action == ACTION_START_PAIRING) {
+            finishAfterPairing = true
+            intent.action = null
+            window.decorView.post {
+                runCatching { startPairing(pairingName()) }
+                    .onFailure(::showError)
+            }
+        }
     }
 
     override fun onResume() {
@@ -157,10 +145,12 @@ class RefractSettingsActivity : AppCompatActivity() {
         val model = File(filesDir, "models/$MODEL_FILE_NAME")
         modelStatus.text =
             when {
-                !model.isFile -> "Missing — import $MODEL_FILE_NAME to generate carriers."
-                model.length() != MODEL_FILE_SIZE ->
-                    "Invalid model file (${model.length()} of $MODEL_FILE_SIZE bytes)."
-                else -> "Installed locally (${model.length()} bytes)."
+                model.isFile && model.length() == MODEL_FILE_SIZE ->
+                    "Model installed (${model.length()} bytes). Runtime loads with the keyboard."
+                model.isFile ->
+                    "Model detected (${model.length()} bytes)."
+                else ->
+                    "Bundled model will be extracted automatically on initial generation."
             }
     }
 
@@ -189,7 +179,7 @@ class RefractSettingsActivity : AppCompatActivity() {
         val conversations = repository.list()
         if (conversations.isEmpty()) {
             conversationsView.addView(
-                TextView(this).apply {
+                MaterialTextView(this).apply {
                     text = "No paired conversations. Carrier generation is disabled."
                     setPadding(0, dp(8), 0, dp(8))
                 }
@@ -203,7 +193,11 @@ class RefractSettingsActivity : AppCompatActivity() {
                     setPadding(0, dp(4), 0, dp(4))
                 }
             row.addView(
-                Button(this).apply {
+                MaterialButton(
+                    this,
+                    null,
+                    com.google.android.material.R.attr.materialButtonOutlinedStyle,
+                ).apply {
                     text =
                         if (conversation.profileId == activeId) {
                             "${conversation.alias} · active"
@@ -211,19 +205,27 @@ class RefractSettingsActivity : AppCompatActivity() {
                             conversation.alias
                         }
                     isAllCaps = false
+                    minHeight = dp(48)
                     setOnClickListener {
                         repository.select(conversation.profileId)
                         refreshConversations()
                     }
                 },
-                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f),
+                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                    marginEnd = dp(8)
+                },
             )
             row.addView(
-                Button(this).apply {
+                MaterialButton(
+                    this,
+                    null,
+                    com.google.android.material.R.attr.materialButtonOutlinedStyle,
+                ).apply {
                     text = "Forget"
                     isAllCaps = false
+                    minHeight = dp(48)
                     setOnClickListener {
-                        AlertDialog.Builder(this@RefractSettingsActivity)
+                        MaterialAlertDialogBuilder(this@RefractSettingsActivity)
                             .setTitle("Forget ${conversation.alias}?")
                             .setMessage("This removes its wrapped key and sender-chain state.")
                             .setNegativeButton("Cancel", null)
@@ -239,85 +241,133 @@ class RefractSettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun promptIdentity(
-        title: String,
-        aliasDefault: String,
-        onConfirm: (alias: String, displayName: String) -> Unit,
-    ) {
-        val alias =
-            EditText(this).apply {
-                hint = "Name on this phone"
-                setText(aliasDefault)
-                isSingleLine = true
-            }
-        val displayName =
-            EditText(this).apply {
-                hint = "Your name shown to them"
-                setText(preferences.pairingDisplayName)
-                isSingleLine = true
-            }
-        val content =
-            LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(dp(24), 0, dp(24), 0)
-                addView(alias)
-                addView(displayName)
-            }
-        val dialog =
-            AlertDialog.Builder(this)
-                .setTitle(title)
-                .setMessage(
-                    "Refract creates temporary X25519 keys. No secret phrase or conversation key " +
-                        "is shown in either QR."
-                )
-                .setView(content)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Continue", null)
-                .create()
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val cleanAlias = alias.text.toString().trim()
-                val cleanName = displayName.text.toString().trim()
-                when {
-                    cleanAlias.isEmpty() -> alias.error = "Name this conversation."
-                    cleanName.isEmpty() -> displayName.error = "Enter your display name."
-                    else -> {
-                        preferences.pairingDisplayName = cleanName
-                        dialog.dismiss()
-                        onConfirm(cleanAlias, cleanName)
-                    }
-                }
-            }
+    /**
+     * The name the peer will see: whatever the user typed, else a device-derived
+     * default.
+     *
+     * Re-validated in BYTES here rather than trusting the field's character limit,
+     * because MAX_PAIRING_NAME_BYTES is a protocol constraint and a 24-character name
+     * in a multi-byte script can still exceed 48 bytes. Over-long or control-character
+     * input falls back to the device name rather than failing the pairing.
+     */
+    private fun pairingName(): String {
+        val chosen = preferences.pairingDisplayName.trim()
+        return if (chosen.isNotEmpty() && isValidPairingName(chosen)) {
+            chosen
+        } else {
+            systemPairingName()
         }
-        dialog.show()
     }
 
-    private fun startPairing(
-        alias: String,
-        displayName: String,
-    ) {
-        pendingInitiator?.close()
-        val session = PairingInitiatorSession.start(displayName)
-        pendingInitiator = session
-        val qr = qrImage(session.invitation.encode())
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("1 of 2 · Let them scan this invitation")
-            .setMessage(
-                "This QR contains a temporary public key and expires in 15 minutes. " +
-                    "After they scan it, scan the response shown on their phone."
-            )
-            .setView(qr)
-            .setNegativeButton("Cancel") { _, _ ->
-                closeInitiator(session)
+    private fun isValidPairingName(candidate: String): Boolean =
+        candidate.toByteArray(Charsets.UTF_8).size <= MAX_PAIRING_NAME_BYTES &&
+            candidate.none { it == '\u0000' || it == '\r' || it == '\n' }
+
+    private fun systemPairingName(): String {
+        val deviceName =
+            runCatching {
+                Settings.Global.getString(contentResolver, Settings.Global.DEVICE_NAME)
             }
-            .setPositiveButton("Scan response") { _, _ ->
+                .getOrNull()
+                .orEmpty()
+                .trim()
+                .takeIf(String::isNotEmpty)
+
+        return listOfNotNull(
+                deviceName,
+                Build.MODEL.trim().takeIf(String::isNotEmpty),
+                "Android device",
+            )
+            .first { candidate ->
+                candidate.toByteArray(Charsets.UTF_8).size <= MAX_PAIRING_NAME_BYTES &&
+                    candidate.none { it == '\u0000' || it == '\r' || it == '\n' }
+            }
+    }
+
+    private fun startPairing(displayName: String) {
+        pendingInitiator?.close()
+        var session = PairingInitiatorSession.start(displayName)
+        pendingInitiator = session
+        var qrBitmap = qrBitmap(session.invitation.encode())
+        val content =
+            pairingDialogContent(
+                qr = qrBitmap,
+                body = getString(R.string.refract_pair_step1_body, displayName),
+            )
+        val nameLayout =
+            content.findViewById<TextInputLayout>(R.id.refract_dialog_name_layout).apply {
+                visibility = View.VISIBLE
+            }
+        val nameInput =
+            content.findViewById<TextInputEditText>(R.id.refract_dialog_name).apply {
+                setText(displayName)
+            }
+        val qrView = content.findViewById<ImageView>(R.id.refract_dialog_qr)
+        val bodyView = content.findViewById<MaterialTextView>(R.id.refract_dialog_body)
+        content.findViewById<MaterialButton>(R.id.refract_dialog_share).apply {
+            visibility = View.VISIBLE
+            setOnClickListener {
+                runCatching {
+                        sharePairingCode(
+                            bitmap = qrBitmap,
+                            kind = "invitation",
+                        )
+                    }
+                    .onFailure(::showError)
+            }
+        }
+        nameInput.doAfterTextChanged { editable ->
+            val chosen = editable?.toString().orEmpty().trim()
+            val updatedName =
+                when {
+                    chosen.isEmpty() -> systemPairingName()
+                    isValidPairingName(chosen) -> chosen
+                    else -> {
+                        nameLayout.error = getString(R.string.refract_display_name_error)
+                        return@doAfterTextChanged
+                    }
+                }
+            nameLayout.error = null
+            preferences.pairingDisplayName = chosen
+            if (updatedName == session.invitation.inviterName) return@doAfterTextChanged
+
+            runCatching {
+                    val replacement = PairingInitiatorSession.start(updatedName)
+                    try {
+                        val replacementQr = qrBitmap(replacement.invitation.encode())
+                        val previous = session
+                        session = replacement
+                        qrBitmap = replacementQr
+                        pendingInitiator = replacement
+                        qrView.setImageBitmap(replacementQr)
+                        bodyView.text =
+                            getString(R.string.refract_pair_step1_body, updatedName)
+                        previous.close()
+                    } catch (error: Throwable) {
+                        replacement.close()
+                        throw error
+                    }
+                }
+                .onFailure(::showError)
+        }
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.refract_pair_step1_title)
+            .setView(content)
+            .setNegativeButton(R.string.refract_cancel) { _, _ ->
+                closeInitiator(session)
+                finishPairingLaunch()
+            }
+            .setPositiveButton(R.string.refract_scan_response) { _, _ ->
                 scanCode(
-                    onFailure = { closeInitiator(session) },
+                    onFailure = {
+                        closeInitiator(session)
+                        finishPairingLaunch()
+                    },
                 ) { response ->
                     runCatching { session.complete(response) }
                         .onSuccess { pairing ->
                             closeInitiator(session)
-                            confirmSafetyWords(alias, pairing)
+                            confirmSafetyWords(pairing)
                         }
                         .onFailure { error ->
                             closeInitiator(session)
@@ -326,13 +376,15 @@ class RefractSettingsActivity : AppCompatActivity() {
                 }
             }
             .create()
-        dialog.setOnCancelListener { closeInitiator(session) }
+        dialog.setOnCancelListener {
+            closeInitiator(session)
+            finishPairingLaunch()
+        }
         dialog.show()
     }
 
     private fun respondToInvitation(
         invitation: PairingInvite,
-        alias: String,
         displayName: String,
     ) {
         pendingResponder?.close()
@@ -345,31 +397,22 @@ class RefractSettingsActivity : AppCompatActivity() {
             .onSuccess { session ->
                 pendingResponder = session
                 val content =
-                    LinearLayout(this).apply {
-                        orientation = LinearLayout.VERTICAL
-                        setPadding(dp(16), 0, dp(16), 0)
-                        addView(qrImage(session.responseCode))
-                        addView(
-                            TextView(this@RefractSettingsActivity).apply {
-                                text = session.pairing.safetyPhrase
-                                textSize = 20f
-                                textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-                                setPadding(0, dp(12), 0, dp(8))
-                            }
-                        )
-                    }
-                val dialog = AlertDialog.Builder(this)
-                    .setTitle("2 of 2 · Let ${invitation.inviterName} scan this response")
-                    .setMessage(
-                        "After they scan it, compare all five safety words aloud. " +
-                            "A mismatch means the exchange was replaced."
+                    pairingDialogContent(
+                        qr = qrBitmap(session.responseCode),
+                        body = getString(R.string.refract_pair_step2_body, displayName),
+                        shareKind = "response",
+                        safetyPhrase = session.pairing.safetyPhrase,
+                    )
+                val dialog = MaterialAlertDialogBuilder(this)
+                    .setTitle(
+                        getString(R.string.refract_pair_step2_title, invitation.inviterName)
                     )
                     .setView(content)
-                    .setNegativeButton("Cancel") { _, _ ->
+                    .setNegativeButton(R.string.refract_cancel) { _, _ ->
                         closeResponder(session)
                     }
-                    .setPositiveButton("Words match · finish") { _, _ ->
-                        runCatching { storePairing(alias, session.pairing) }
+                    .setPositiveButton(R.string.refract_words_match) { _, _ ->
+                        runCatching { storePairing(session.pairing) }
                             .onSuccess {
                                 val peerName = session.pairing.peerName
                                 closeResponder(session)
@@ -388,23 +431,26 @@ class RefractSettingsActivity : AppCompatActivity() {
             .onFailure(::showError)
     }
 
-    private fun confirmSafetyWords(
-        alias: String,
-        pairing: PairingEstablishedSession,
-    ) {
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("Verify ${pairing.peerName}")
-            .setMessage(
-                "Compare all five words with their phone:\n\n${pairing.safetyPhrase}\n\n" +
-                    "If any word differs, cancel and start again."
+    private fun confirmSafetyWords(pairing: PairingEstablishedSession) {
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.refract_pair_verify_title, pairing.peerName))
+            // Safety words rendered as headline type in the shared layout rather than
+            // buried mid-paragraph in setMessage, since reading them aloud IS the task.
+            .setMessage(R.string.refract_pair_verify_body)
+            .setView(
+                pairingDialogVerifyContent(safetyPhrase = pairing.safetyPhrase)
             )
-            .setNegativeButton("Cancel") { _, _ -> pairing.close() }
-            .setPositiveButton("Words match · finish") { _, _ ->
-                runCatching { storePairing(alias, pairing) }
+            .setNegativeButton(R.string.refract_cancel) { _, _ ->
+                pairing.close()
+                finishPairingLaunch()
+            }
+            .setPositiveButton(R.string.refract_words_match) { _, _ ->
+                runCatching { storePairing(pairing) }
                     .onSuccess {
                         setOperation("Paired with ${pairing.peerName}.")
                         pairing.close()
                         refresh()
+                        finishPairingLaunch()
                     }
                     .onFailure { error ->
                         pairing.close()
@@ -412,18 +458,18 @@ class RefractSettingsActivity : AppCompatActivity() {
                     }
             }
             .create()
-        dialog.setOnCancelListener { pairing.close() }
+        dialog.setOnCancelListener {
+            pairing.close()
+            finishPairingLaunch()
+        }
         dialog.show()
     }
 
-    private fun storePairing(
-        alias: String,
-        pairing: PairingEstablishedSession,
-    ) {
+    private fun storePairing(pairing: PairingEstablishedSession) {
         val key = pairing.copyConversationKey()
         try {
             repository.createFromPairing(
-                alias = alias,
+                alias = pairing.peerName,
                 conversationId = pairing.conversationId,
                 localSender = pairing.localSender,
                 peerSender = pairing.peerSender,
@@ -456,9 +502,10 @@ class RefractSettingsActivity : AppCompatActivity() {
                 onFailure()
                 showError(error)
             }
+            .addOnCanceledListener { onFailure() }
     }
 
-    private fun qrImage(value: String): ImageView {
+    private fun qrBitmap(value: String): Bitmap {
         val size = resources.displayMetrics.widthPixels.coerceAtMost(dp(360))
         val matrix =
             QRCodeWriter().encode(
@@ -476,104 +523,101 @@ class RefractSettingsActivity : AppCompatActivity() {
             IntArray(size * size) { index ->
                 if (matrix[index % size, index / size]) Color.BLACK else Color.WHITE
             }
-        val bitmap =
-            Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888).apply {
-                setPixels(pixels, 0, size, 0, 0, size, size)
-            }
-        return ImageView(this).apply {
-            setImageBitmap(bitmap)
-            contentDescription = "Refract public-key pairing QR code"
-            adjustViewBounds = true
+        return Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888).apply {
+            setPixels(pixels, 0, size, 0, 0, size, size)
         }
     }
 
-    @Deprecated("The settings activity uses the platform document picker contract.")
-    override fun onActivityResult(
-        requestCode: Int,
-        resultCode: Int,
-        data: Intent?,
-    ) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode != REQUEST_MODEL || resultCode != RESULT_OK) return
-        val uri = data?.data ?: return
-        setOperation("Importing Gemma model… keep this screen open.")
-        worker.execute {
-            runCatching {
-                    val metadata =
-                        contentResolver.query(
-                            uri,
-                            arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE),
-                            null,
-                            null,
-                            null,
-                        )?.use { cursor ->
-                            if (!cursor.moveToFirst()) {
-                                null
-                            } else {
-                                Pair(
-                                    cursor.getString(
-                                        cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME)
-                                    ),
-                                    cursor
-                                        .getColumnIndexOrThrow(OpenableColumns.SIZE)
-                                        .let { sizeColumn ->
-                                            if (cursor.isNull(sizeColumn)) null
-                                            else cursor.getLong(sizeColumn)
-                                        },
-                                )
-                            }
-                        }
-                    require(metadata?.first == MODEL_FILE_NAME) {
-                        "Expected $MODEL_FILE_NAME."
-                    }
-                    require(metadata.second == null || metadata.second == MODEL_FILE_SIZE) {
-                        "The selected model has the wrong size."
-                    }
-                    require(filesDir.usableSpace > MODEL_FILE_SIZE + IMPORT_HEADROOM_BYTES) {
-                        "There is not enough free storage to import this model safely."
-                    }
-                    val destination = File(filesDir, "models/$MODEL_FILE_NAME")
-                    destination.parentFile?.mkdirs()
-                    val temporary = File(destination.parentFile, "$MODEL_FILE_NAME.importing")
-                    temporary.delete()
-                    try {
-                        contentResolver.openInputStream(uri).use { input ->
-                            requireNotNull(input) { "The selected model could not be opened." }
-                            temporary.outputStream().buffered().use(input::copyTo)
-                        }
-                        require(temporary.length() == MODEL_FILE_SIZE) {
-                            "The imported model is incomplete."
-                        }
-                        try {
-                            Files.move(
-                                temporary.toPath(),
-                                destination.toPath(),
-                                StandardCopyOption.ATOMIC_MOVE,
-                                StandardCopyOption.REPLACE_EXISTING,
-                            )
-                        } catch (_: AtomicMoveNotSupportedException) {
-                            Files.move(
-                                temporary.toPath(),
-                                destination.toPath(),
-                                StandardCopyOption.REPLACE_EXISTING,
-                            )
-                        }
-                        preferences.notifyModelChanged()
-                    } catch (error: Throwable) {
-                        temporary.delete()
-                        throw error
-                    }
-                }
-                .onSuccess {
-                    runOnUiThread {
-                        setOperation("Gemma model imported.")
-                        refresh()
-                    }
-                }
-                .onFailure { error ->
-                    runOnUiThread { showError(error) }
-                }
+    /**
+     * Builds the shared content view for the pairing dialogs.
+     *
+     * Share is a button inside this view rather than the dialog's neutral button:
+     * three buttons plus labels of this length overflow the M3 dialog button bar,
+     * which is a single non-wrapping row, and the neutral one was being clipped away
+     * entirely. It also reads better next to the code it acts on.
+     *
+     * @param safetyPhrase shown only when the step has one to compare (step 2 and
+     *   the verify dialog); step 1 has not derived it yet.
+     */
+    /**
+     * Verify dialog: safety words only. Reuses the shared layout so the phrase gets
+     * identical treatment to step 2, hiding the QR card and the share button since
+     * there is nothing left to scan or send at this point.
+     */
+    private fun pairingDialogVerifyContent(safetyPhrase: String): View {
+        val content = layoutInflater.inflate(R.layout.refract_pairing_dialog, null, false)
+        // Hide the card, not just the ImageView: the card carries the white QR field
+        // and would otherwise remain as an empty white block.
+        content.findViewById<View>(R.id.refract_dialog_qr_card).visibility = View.GONE
+        content.findViewById<View>(R.id.refract_dialog_share).visibility = View.GONE
+        content.findViewById<MaterialTextView>(R.id.refract_dialog_body).visibility = View.GONE
+        content.findViewById<MaterialTextView>(R.id.refract_dialog_safety).apply {
+            text = safetyPhrase
+            visibility = View.VISIBLE
         }
+        return content
+    }
+
+    private fun pairingDialogContent(
+        qr: Bitmap,
+        body: String,
+        shareKind: String? = null,
+        safetyPhrase: String? = null,
+    ): View {
+        val content = layoutInflater.inflate(R.layout.refract_pairing_dialog, null, false)
+        content.findViewById<ImageView>(R.id.refract_dialog_qr).setImageBitmap(qr)
+        content.findViewById<MaterialTextView>(R.id.refract_dialog_body).text = body
+        content.findViewById<MaterialTextView>(R.id.refract_dialog_safety).apply {
+            text = safetyPhrase
+            visibility = if (safetyPhrase == null) View.GONE else View.VISIBLE
+        }
+        content.findViewById<MaterialButton>(R.id.refract_dialog_share).apply {
+            if (shareKind == null) {
+                visibility = View.GONE
+            } else {
+                setOnClickListener {
+                    runCatching { sharePairingCode(bitmap = qr, kind = shareKind) }
+                        .onFailure(::showError)
+                }
+            }
+        }
+        return content
+    }
+
+    private fun sharePairingCode(
+        bitmap: Bitmap,
+        kind: String,
+    ) {
+        val directory = File(cacheDir, "pairing").apply { mkdirs() }
+        val image = File(directory, "refract-$kind-${System.currentTimeMillis()}.png")
+        image.outputStream().buffered().use { output ->
+            check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) {
+                "The pairing code could not be prepared for sharing."
+            }
+        }
+        window.decorView.postDelayed(
+            { image.delete() },
+            PAIRING_SHARE_LIFETIME_MILLIS,
+        )
+
+        val uri =
+            FileProvider.getUriForFile(
+                this,
+                "$packageName.fileprovider",
+                image,
+            )
+        val share =
+            Intent(Intent.ACTION_SEND).apply {
+                type = "image/png"
+                clipData = ClipData.newRawUri("Refract pairing code", uri)
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(
+                    Intent.EXTRA_TEXT,
+                    "Refract Keyboard pairing $kind. This public-key code expires in 15 minutes.",
+                )
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        startActivity(Intent.createChooser(share, "Share pairing code"))
     }
 
     private fun closeInitiator(session: PairingInitiatorSession) {
@@ -594,20 +638,23 @@ class RefractSettingsActivity : AppCompatActivity() {
         operationStatus.text = message
     }
 
+    private fun finishPairingLaunch() {
+        if (finishAfterPairing) finish()
+    }
+
     private fun dp(value: Int): Int =
         (value * resources.displayMetrics.density).toInt()
 
     override fun onDestroy() {
         pendingInitiator?.close()
         pendingResponder?.close()
-        worker.shutdownNow()
         super.onDestroy()
     }
 
     private companion object {
-        const val REQUEST_MODEL = 2201
         const val MODEL_FILE_NAME = "gemma-4-E2B-it.litertlm"
         const val MODEL_FILE_SIZE = 2_588_147_712L
-        const val IMPORT_HEADROOM_BYTES = 256L * 1024 * 1024
+        const val MAX_PAIRING_NAME_BYTES = 48
+        const val PAIRING_SHARE_LIFETIME_MILLIS = 16 * 60 * 1000L
     }
 }

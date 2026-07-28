@@ -3,6 +3,9 @@ package app.refract.keyboard
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import app.refract.keyboard.protocol.GemmaTransportSafeTokens
+import app.refract.keyboard.protocol.SecureBucketCarrierCodec
+import app.refract.keyboard.protocol.TransportTokenMasks
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.Conversation
@@ -13,17 +16,18 @@ import com.google.ai.edge.litertlm.Message
 import com.google.ai.edge.litertlm.MessageCallback
 import com.google.ai.edge.litertlm.SamplerConfig
 import com.google.ai.edge.litertlm.StegoBucketConfig
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import app.refract.keyboard.protocol.GemmaTransportSafeTokens
-import app.refract.keyboard.protocol.SecureBucketCarrierCodec
-import app.refract.keyboard.protocol.TransportTokenMasks
 
 /** Owns the long-lived Gemma engine used by the keyboard process. */
 class CarrierModel(context: Context) {
     private val appContext = context.applicationContext
+
     enum class ModelStatus {
         IDLE,
         NOT_PROVISIONED,
@@ -31,6 +35,11 @@ class CarrierModel(context: Context) {
         READY,
         ERROR
     }
+
+    data class State(
+        val status: ModelStatus = ModelStatus.IDLE,
+        val message: String? = null,
+    )
 
     interface ModelStatusListener {
         fun onStatusChanged(status: ModelStatus, message: String? = null)
@@ -61,12 +70,14 @@ class CarrierModel(context: Context) {
     private val reloadAfterGeneration = AtomicBoolean(false)
     private val pendingGeneration = AtomicReference<GenerationResult?>(null)
 
-    @Volatile
-    var modelStatus: ModelStatus = ModelStatus.IDLE
-        private set
-    @Volatile
-    var lastStatusMessage: String? = null
-        private set
+    private val _modelState = MutableStateFlow(State())
+    val modelState: StateFlow<State> = _modelState.asStateFlow()
+
+    val modelStatus: ModelStatus
+        get() = _modelState.value.status
+
+    val lastStatusMessage: String?
+        get() = _modelState.value.message
 
     @Volatile
     private var statusListener: ModelStatusListener? = null
@@ -103,11 +114,11 @@ class CarrierModel(context: Context) {
     }
 
     fun preloadModelAsync() {
-        val modelFile = File(appContext.filesDir, "models/$GEMMA_MODEL_FILE_NAME")
-        if (!modelFile.isFile) {
+        val modelFile = ensureModelFile()
+        if (modelFile == null) {
             updateStatus(
                 ModelStatus.NOT_PROVISIONED,
-                "Gemma model is not provisioned. Open the app to import it.",
+                "Gemma model is not found in internal storage or assets.",
             )
             return
         }
@@ -160,7 +171,7 @@ class CarrierModel(context: Context) {
             preloadQueued.set(false)
             if (
                 preferences.preloadModel &&
-                    preferences.runtimeBackend != activeBackend
+                    preferences.runtimeBackend != requestedBackend
             ) {
                 preloadModelAsync()
             }
@@ -168,8 +179,7 @@ class CarrierModel(context: Context) {
     }
 
     private fun updateStatus(status: ModelStatus, message: String? = null) {
-        modelStatus = status
-        lastStatusMessage = message
+        _modelState.value = State(status, message)
         Log.i(TAG, "model_status=$status message=$message")
         statusListener?.onStatusChanged(status, message)
     }
@@ -272,6 +282,44 @@ class CarrierModel(context: Context) {
         }
     }
 
+    private fun ensureModelFile(): File? {
+        val destination = File(appContext.filesDir, "models/$GEMMA_MODEL_FILE_NAME")
+        if (destination.isFile && destination.length() > 0) {
+            return destination
+        }
+
+        val assetPaths = listOf("models/$GEMMA_MODEL_FILE_NAME", GEMMA_MODEL_FILE_NAME)
+        val assetManager = appContext.assets
+        val foundAsset = assetPaths.firstOrNull { assetPath ->
+            runCatching {
+                assetManager.open(assetPath).use { }
+                true
+            }.getOrDefault(false)
+        }
+
+        if (foundAsset != null) {
+            Log.i(TAG, "Extracting bundled Gemma model from assets: $foundAsset")
+            destination.parentFile?.mkdirs()
+            val tempFile = File(destination.parentFile, "$GEMMA_MODEL_FILE_NAME.extracting")
+            tempFile.delete()
+            try {
+                assetManager.open(foundAsset).use { input ->
+                    tempFile.outputStream().buffered().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                if (tempFile.renameTo(destination)) {
+                    Log.i(TAG, "Successfully extracted bundled model to ${destination.absolutePath}")
+                    return destination
+                }
+            } catch (error: Throwable) {
+                tempFile.delete()
+                Log.e(TAG, "Failed to extract bundled Gemma model", error)
+            }
+        }
+        return if (destination.isFile) destination else null
+    }
+
     private fun ensureRuntime(
         listener: GenerationListener,
         stage: AtomicReference<String>,
@@ -281,9 +329,9 @@ class CarrierModel(context: Context) {
             Log.i(TAG, "generation_stage=runtime_ready cached=true")
             return it
         }
-        val modelFile = File(appContext.filesDir, "models/$GEMMA_MODEL_FILE_NAME")
-        require(modelFile.isFile) {
-            "Gemma is not provisioned. Open the companion app and provision the model first."
+        val modelFile = ensureModelFile()
+        require(modelFile != null && modelFile.isFile) {
+            "Gemma model is not provisioned or extracted."
         }
         reportProgress(
             listener,
@@ -299,9 +347,9 @@ class CarrierModel(context: Context) {
     private fun ensureEngine(requestedBackend: KeyboardPreferences.RuntimeBackend): Engine {
         engine?.takeIf { activeBackend == requestedBackend }?.let { return it }
         closeRuntime()
-        val modelFile = File(appContext.filesDir, "models/$GEMMA_MODEL_FILE_NAME")
-        require(modelFile.isFile) {
-            "Gemma is not provisioned. Open settings and import the model first."
+        val modelFile = ensureModelFile()
+        require(modelFile != null && modelFile.isFile) {
+            "Gemma model is not provisioned or extracted."
         }
         val nextEngine =
             Engine(

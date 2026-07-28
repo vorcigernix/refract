@@ -12,8 +12,10 @@
     <string name="refract_enable_keyboard" translatable="false">Enable keyboard</string>
     <string name="refract_choose_keyboard" translatable="false">Choose keyboard</string>
     <string name="refract_pairing_title" translatable="false">Private conversations</string>
-    <string name="refract_pairing_description" translatable="false">Pair in person with two public-key QR codes. Neither QR contains the conversation key; compare all five safety words before finishing.</string>
-    <string name="refract_start_pairing" translatable="false">Start pairing</string>
+    <string name="refract_pairing_description" translatable="false">Exchange two public-key QR codes. Neither contains the conversation key; use a separate channel when sharing and compare all five safety words before finishing.</string>
+    <string name="refract_display_name_label" translatable="false">Device name</string>
+    <string name="refract_display_name_error" translatable="false">Use a shorter device name.</string>
+    <string name="refract_start_pairing" translatable="false">Pair</string>
     <string name="refract_join_pairing" translatable="false">Join someone</string>
     <string name="refract_model_title" translatable="false">Local carrier model</string>
     <string name="refract_import_model" translatable="false">Import Gemma model</string>
@@ -21,4 +23,21 @@
     <string name="refract_cpu" translatable="false">CPU</string>
     <string name="refract_preload" translatable="false">Warm up when the keyboard opens</string>
     <string name="refract_security_note" translatable="false">Prototype security: X25519 and HKDF derive the conversation key locally; Android Keystore protects it at rest. Receiving and decoding are not implemented yet.</string>
+
+    <!-- Pairing dialogs. Kept deliberately tight: the previous copy ran to ~65 words
+         of prose above the QR, which pushed the code itself off a short screen and
+         buried the one instruction that matters. Each string now leads with what to
+         do, then the single security caveat, in that order. -->
+    <string name="refract_pair_step1_title" translatable="false">Let them scan this (1 of 2)</string>
+    <string name="refract_pair_step1_body" translatable="false">Pairing as %1$s. The code carries a temporary public key and expires in 15 minutes.\n\nSend it outside the chat you plan to use \u2014 that chat could swap the code. You\u2019ll compare safety words next.</string>
+    <string name="refract_pair_step2_title" translatable="false">Let %1$s scan this (2 of 2)</string>
+    <string name="refract_pair_step2_body" translatable="false">Pairing as %1$s. Read these words aloud and confirm they match on both phones.\n\nIf you share the code, use a different app than your chat.</string>
+    <string name="refract_pair_verify_title" translatable="false">Verify %1$s</string>
+    <string name="refract_pair_verify_body" translatable="false">Read these words aloud. If any of them differs on their phone, cancel and start again.</string>
+    <string name="refract_pair_qr_description" translatable="false">Pairing QR code</string>
+    <string name="refract_share" translatable="false">Share</string>
+    <string name="refract_share_chooser" translatable="false">Share pairing code</string>
+    <string name="refract_words_match" translatable="false">Words match</string>
+    <string name="refract_scan_response" translatable="false">Scan response</string>
+    <string name="refract_cancel" translatable="false">Cancel</string>
 </resources>

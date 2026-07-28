@@ -29,6 +29,8 @@ Requirements:
 - Android SDK 37
 - Android NDK `29.0.14206865`
 - An Android 14 or newer device (`minSdk 34`)
+- A licensed `gemma-4-E2B-it.litertlm` model at
+  `refract-keyboard/java/assets/models/gemma-4-E2B-it.litertlm`
 
 ```sh
 cd refract-keyboard

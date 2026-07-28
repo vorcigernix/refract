@@ -1,3 +1,4 @@
 # Workspace-local IDE and OS files.
 /.idea/
-/.DS_Store
+.DS_Store
+/refract-keyboard/java/assets/models/*.litertlm

@@ -6,12 +6,12 @@ import android.os.Looper
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputConnection
-import android.widget.Button
-import android.widget.TextView
 import com.android.inputmethod.event.Event
 import com.android.inputmethod.latin.LatinIME
 import com.android.inputmethod.latin.R
 import com.android.inputmethod.latin.common.Constants
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textview.MaterialTextView
 
 /**
  * Refract's small integration boundary with LatinIME.
@@ -31,28 +31,37 @@ class RefractImeController(
 
     private var suggestionStrip: View? = null
     private var privatePanel: View? = null
-    private var toggleButton: Button? = null
-    private var draftView: TextView? = null
-    private var statusView: TextView? = null
-    private var settingsButton: Button? = null
-    private var generateButton: Button? = null
+    private var toggleButton: MaterialButton? = null
+    private var draftView: MaterialTextView? = null
+    private var statusView: MaterialTextView? = null
+    private var settingsButton: MaterialButton? = null
+    private var generateButton: MaterialButton? = null
 
     fun attach(inputView: View) {
         suggestionStrip = inputView.findViewById(R.id.suggestion_strip_view)
         privatePanel = inputView.findViewById(R.id.refract_private_panel)
-        toggleButton = inputView.findViewById<Button>(R.id.refract_toggle).also { button ->
+        toggleButton = inputView.findViewById<MaterialButton>(R.id.refract_toggle).also { button ->
             button.setOnClickListener { setPrivateMode(!privateMode) }
         }
         draftView = inputView.findViewById(R.id.refract_private_draft)
         statusView = inputView.findViewById(R.id.refract_private_status)
-        generateButton = inputView.findViewById<Button>(R.id.refract_generate).also { button ->
-            button.setOnClickListener { generateCarrier() }
-        }
+        generateButton =
+            inputView.findViewById<MaterialButton>(R.id.refract_generate).also { button ->
+                button.setOnClickListener { generateCarrier() }
+            }
         settingsButton =
-            inputView.findViewById<Button>(R.id.refract_settings).also { button ->
+            inputView.findViewById<MaterialButton>(R.id.refract_settings).also { button ->
                 button.setOnClickListener {
+                    val action =
+                        if (carrierModel.hasActiveConversation()) {
+                            null
+                        } else {
+                            ACTION_START_PAIRING
+                        }
+                    setPrivateMode(false)
                     ime.startActivity(
                         Intent(ime, RefractSettingsActivity::class.java)
+                            .setAction(action)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     )
                 }

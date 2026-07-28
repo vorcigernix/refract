@@ -38,10 +38,19 @@ class KeyboardPreferences(context: Context) {
             preferences.edit().putBoolean(KEY_HAPTIC_FEEDBACK, value).apply()
         }
 
+    /**
+     * The name shown to the person you pair with, and stored as their peer alias.
+     *
+     * Blank means "not chosen yet", which callers resolve to a device-derived default.
+     * Kept blank rather than eagerly seeded so a later edit to the system device name
+     * still flows through for users who never set one; once set, this wins.
+     */
     var pairingDisplayName: String
         get() = preferences.getString(KEY_PAIRING_DISPLAY_NAME, "").orEmpty()
         set(value) {
-            preferences.edit().putString(KEY_PAIRING_DISPLAY_NAME, value.trim()).apply()
+            preferences.edit()
+                .putString(KEY_PAIRING_DISPLAY_NAME, value.trim())
+                .apply()
         }
 
     fun notifyModelChanged() {
@@ -61,8 +70,8 @@ class KeyboardPreferences(context: Context) {
         const val KEY_RUNTIME_BACKEND = "runtime_backend"
         const val KEY_PRELOAD_MODEL = "preload_model"
         const val KEY_HAPTIC_FEEDBACK = "haptic_feedback"
-        const val KEY_MODEL_REVISION = "model_revision"
         const val KEY_PAIRING_DISPLAY_NAME = "pairing_display_name"
+        const val KEY_MODEL_REVISION = "model_revision"
 
         private const val FILE_NAME = "keyboard_preferences"
     }

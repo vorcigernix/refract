@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Refract Keyboard: pairing name length cap.
+
+     MAX_PAIRING_NAME_BYTES is 48 UTF-8 BYTES in the protocol. This caps the field at
+     24 CHARACTERS, which cannot exceed 48 bytes even if every character is 2 bytes.
+     Multi-byte scripts can still exceed it in theory, so the Activity re-validates in
+     bytes before pairing; this is a courtesy limit, not the security boundary.
+-->
+<resources>
+    <integer name="refract_display_name_max_length">24</integer>
+</resources>
